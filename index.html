@@ -44,15 +44,14 @@
       document.getElementById('result').innerHTML = 'Processing...';
       
       try {
-        // Convert image to base64
         const base64 = await fileToBase64(file);
         
         const formData = new FormData();
         formData.append('base64Image', base64);
         formData.append('language', 'eng');
-        formData.append('apikey', 'helloworld'); // Free demo key
+        formData.append('apikey', 'helloworld'); // demo key
         formData.append('isOverlayRequired', 'false');
-        formData.append('OCREngine', '2'); // Engine 2 is better at special characters
+        formData.append('OCREngine', '2');
         
         const response = await fetch('https://api.ocr.space/parse/image', {
           method: 'POST',
@@ -64,16 +63,6 @@
         if (result.ParsedResults && result.ParsedResults[0]) {
           let extractedText = result.ParsedResults[0].ParsedText;
           
-          // Fix OCR errors where fractions become just "%"
-          extractedText = extractedText
-            .replace(/\s%\s/g, ' 1/2 ')  // Most common fraction in recipes
-            .replace(/\s%/g, ' 1/2')     // % at end of word
-            .replace(/%\s/g, '1/2 ')     // % at start of word
-            .replace(/^%/gm, '1/2')      // % at start of line
-            .replace(/%$/gm, '1/2')      // % at end of line
-            .replace(/(?<!\d)%(?!\d)/g, '1/2'); // Standalone % not next to numbers
-          
-          // Generate HTML content
           const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
@@ -103,11 +92,9 @@
 </body>
 </html>`;
           
-          // Create blob and download link
           const blob = new Blob([htmlContent], { type: 'text/html' });
           const url = URL.createObjectURL(blob);
           
-          // Display results with download link
           document.getElementById('result').innerHTML = `
             <h3>Extracted Text:</h3>
             <pre>${extractedText}</pre>
